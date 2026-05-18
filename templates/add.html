@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Add Food</h2>
+
+{% if error %}
+    <p class="error">{{ error }}</p>
+{% endif %}
+{% if success_message %}
+<div class="card">
+    <p class="success">{{ success_message }}</p>
+
+    <a href="{{ url_for('add') }}">
+        <button type="button">Add Another Food</button>
+    </a>
+
+    <a href="{{ url_for('home') }}">
+        <button type="button">Return Home</button>
+    </a>
+    </div>
+{% endif %}
+{% if not success_message %}
+<div class="card">
+<form method="POST">
+
+    <label for="log_date">Date:</label>
+    <input
+        type="date"
+        id="log_date"
+        name="log_date"
+        value="{{ request.form.get('log_date', '') }}"
+        required
+    >
+
+    <label for="food">Food:</label>
+    <input
+        type="text"
+        id="food"
+        name="food"
+        value="{{ request.form.get('food', '') }}"
+        required
+    >
+
+    <label for="calories">Calories:</label>
+    <input
+        type="text"
+        id="calories"
+        name="calories"
+        value="{{ request.form.get('calories', '') }}"
+        required
+    >
+
+    <label for="protein">Protein:</label>
+    <input
+        type="text"
+        id="protein"
+        name="protein"
+        value="{{ request.form.get('protein', '') }}"
+        required
+    >
+
+    <label for="carbs">Carbs:</label>
+    <input
+        type="text"
+        id="carbs"
+        name="carbs"
+        value="{{ request.form.get('carbs', '') }}"
+        required
+    >
+
+    <label for="fats">Fats:</label>
+    <input
+        type="text"
+        id="fats"
+        name="fats"
+        value="{{ request.form.get('fats', '') }}"
+        required
+    >
+
+    <button type="submit">Submit</button>
+</form>
+</div>
+{% endif %}
+{% endblock %}

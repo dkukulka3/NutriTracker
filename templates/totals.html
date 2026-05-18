@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Daily Totals</h2>
+
+{% if error %}
+    <p class="error">{{ error }}</p>
+{% endif %}
+<div class="card">
+<form method="POST">
+    <label for="log_date">Date:</label>
+    <input type="date" id="log_date" name="log_date" value="{{ log_date or '' }}">
+    <button type="submit">View</button>
+</form>
+</div>
+
+{% if totals %}
+<div class="card">
+    <h3>Nutrition Totals{% if log_date %} for {{ log_date }}{% endif %}</h3>
+
+    <p>Calories: {{ totals["calories"] }}</p>
+    <p>Protein: {{ totals["protein"] }}</p>
+    <p>Carbs: {{ totals["carbs"] }}</p>
+    <p>Fats: {{ totals["fats"] }}</p>
+</div>
+<div class="card">
+    {% if goals %}
+
+        <h3>Goal Progress</h3>
+
+        <p>
+            Calories:
+            {{ totals["calories"] }}
+            /
+            {{ goals["calorie_goal"] }}
+        </p>
+
+        <p>{{ calorie_percent|round(1) }}% complete</p>
+
+        <progress value="{{ calorie_percent }}" max="100"></progress>
+
+        <p>
+            Protein:
+            {{ totals["protein"] }}g
+            /
+            {{ goals["protein_goal"] }}g
+        </p>
+
+        <p>{{ protein_percent|round(1) }}% complete</p>
+
+        <progress value="{{ protein_percent }}" max="100"></progress>
+
+    {% else %}
+
+        <p>No goals set yet.</p>
+
+    {% endif %}
+    </div>
+<div class="card">
+    <h3>Foods Logged</h3>
+
+    {% if entries %}
+
+        {% for entry in entries %}
+
+        <div class="food-entry">
+
+            <p><strong>Food:</strong> {{ entry[1] }}</p>
+            <p>Calories: {{ entry[2] }}</p>
+            <p>Protein: {{ entry[3] }}</p>
+            <p>Carbs: {{ entry[4] }}</p>
+            <p>Fats: {{ entry[5] }}</p>
+
+            <a href="{{ url_for('edit', entry_id=entry[0]) }}">
+                <button type="button">Edit</button>
+            </a>
+
+            <form
+                method="POST"
+                action="{{ url_for('delete', entry_id=entry[0]) }}"
+                style="display: inline;"
+            >
+
+                <input type="hidden" name="log_date" value="{{ log_date }}">
+
+                <button type="submit">Delete</button>
+
+            </form>
+
+            <hr>
+
+        </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <p>No food entries found for this date.</p>
+
+    {% endif %}
+    </div>
+    
+<div class="card">
+    <h3>Quick Actions</h3>
+
+    <a href="{{ url_for('add') }}">
+        <button type="button">Add Food</button>
+    </a>
+
+    <a href="{{ url_for('home') }}">
+        <button type="button">Return Home</button>
+    </a>
+
+    <a href="{{ url_for('goals') }}">
+        <button type="button">Set Goals</button>
+    </a>
+</div>
+{% endif %}
+
+{% endblock %}

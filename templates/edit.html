@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>Edit Food Entry</h2>
+
+{% if error %}
+    <p class="error">{{ error }}</p>
+{% endif %}
+
+<form method="POST">
+
+    <label for="log_date">Date:</label>
+    <input
+        type="date"
+        id="log_date"
+        name="log_date"
+        value="{{ entry[1] }}"
+        required
+    >
+
+    <label for="food">Food:</label>
+    <input
+        type="text"
+        id="food"
+        name="food"
+        value="{{ entry[2] }}"
+        required
+    >
+
+    <label for="calories">Calories:</label>
+    <input
+        type="text"
+        id="calories"
+        name="calories"
+        value="{{ entry[3] }}"
+        required
+    >
+
+    <label for="protein">Protein:</label>
+    <input
+        type="text"
+        id="protein"
+        name="protein"
+        value="{{ entry[4] }}"
+        required
+    >
+
+    <label for="carbs">Carbs:</label>
+    <input
+        type="text"
+        id="carbs"
+        name="carbs"
+        value="{{ entry[5] }}"
+        required
+    >
+
+    <label for="fats">Fats:</label>
+    <input
+        type="text"
+        id="fats"
+        name="fats"
+        value="{{ entry[6] }}"
+        required
+    >
+
+    <button type="submit">Save Changes</button>
+
+</form>
+
+<a href="{{ url_for('totals') }}">
+    <button type="button">Cancel</button>
+</a>
+
+{% endblock %}

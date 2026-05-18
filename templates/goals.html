@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>Set Goals</h2>
+
+{% if error %}
+    <p class="error">{{ error }}</p>
+{% endif %}
+
+{% if success_message %}
+<div class="card">
+    <p class="success">{{ success_message }}</p>
+
+    <a href="{{ url_for('add') }}">
+        <button type="button">Add Food</button>
+    </a>
+
+    <a href="{{ url_for('home') }}">
+        <button type="button">Return Home</button>
+    </a>
+
+    <a href="{{ url_for('totals') }}">
+        <button type="button">View Totals</button>
+    </a>
+</div>
+{% endif %}
+
+{% if not success_message %}
+<div class="card">
+<form method="POST">
+
+    <label for="calorie_goal">Calories:</label>
+    <input
+        type="text"
+        id="calorie_goal"
+        name="calorie_goal"
+        value="{{ request.form.get('calorie_goal', '') }}"
+        required
+    >
+
+    <label for="protein_goal">Protein:</label>
+    <input
+        type="text"
+        id="protein_goal"
+        name="protein_goal"
+        value="{{ request.form.get('protein_goal', '') }}"
+        required
+    >
+
+    <button type="submit">Save</button>
+
+</form>
+</div>
+{% endif %}
+
+{% endblock %}
