@@ -1,164 +1,124 @@
 #Daily nutrition tracker program
-#Importing sqlite and setting file name
-import sqlite3
-DB_PATH = "nutrition_log.db"
-
-# Init function to setup program
-def init_db():
-    with sqlite3.connect(DB_PATH) as connection:
-        c = connection.cursor()
-
-        # Nutrient log table
-        c.execute("""
-            CREATE TABLE IF NOT EXISTS log (
-                  id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  log_date TEXT,
-                  food TEXT,
-                  calories REAL,
-                  protein REAL,
-                  carbs REAL,
-                  fats REAL
-                  )
-              """)
-
-        # Protein/calories goal table
-        c.execute("""
-            CREATE TABLE IF NOT EXISTS goals (
-                  id INTEGER PRIMARY KEY,
-                  calorie_goal REAL,
-                  protein_goal REAL
-                  )
-              """)
-
+#Importing libraries
+from app.extensions import db
+from app.models import FoodEntry, Goal
+from sqlalchemy import func
 
 # Function to add entries
 def add_entry(log_date, food, calories, protein, carbs, fats):
-    # Backend validation
-    if not log_date or not food:
-        return
+    """
+    Add a new food entry to the database using SQLAlchemy.
+    """
 
-    if None in (calories, protein, carbs, fats):
-        return
+    new_entry = FoodEntry(
+        log_date=log_date,
+        food=food,
+        calories=calories,
+        protein=protein,
+        carbs=carbs,
+        fats=fats
+    )
 
-    if calories < 0 or protein < 0 or carbs < 0 or fats < 0:
-        return
-
-    with sqlite3.connect(DB_PATH) as connection:
-        c = connection.cursor()
-
-        c.execute("""
-            INSERT INTO log (log_date, food, calories, protein, carbs, fats)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (log_date, food, calories, protein, carbs, fats))
+    db.session.add(new_entry)
+    db.session.commit()
 
 
 # Function to calculate totals
 def calculate_total(log_date):
-    with sqlite3.connect(DB_PATH) as connection:
-        c = connection.cursor()
+    """
+    Calculate nutrition totals for a given date using SQLAlchemy.
+    """
 
-        c.execute("""
-                  SELECT SUM(calories), SUM(protein), SUM(carbs), SUM(fats)
-                  FROM log
-                  WHERE log_date = ?
-                  """, (log_date,))
-
-        # Create tuple
-        row = c.fetchone()
-
-    # Assign each position of the tuple to a variable
-    total_calories, total_protein, total_carbs, total_fats = [
-        value or 0 for value in row
-    ]
+    totals = db.session.query(
+        func.sum(FoodEntry.calories),
+        func.sum(FoodEntry.protein),
+        func.sum(FoodEntry.carbs),
+        func.sum(FoodEntry.fats)
+    ).filter(
+        FoodEntry.log_date == log_date
+    ).first()
 
     return {
-        "calories": total_calories,
-        "protein": total_protein,
-        "carbs": total_carbs,
-        "fats": total_fats
+        "calories": totals[0] or 0,
+        "protein": totals[1] or 0,
+        "carbs": totals[2] or 0,
+        "fats": totals[3] or 0
     }
 
 
 # Function to set protein/calorie goals
 def set_goals(calorie_goal, protein_goal):
-    # Backend validation
     if calorie_goal is None or protein_goal is None:
         return
 
     if calorie_goal < 0 or protein_goal < 0:
         return
 
-    with sqlite3.connect(DB_PATH) as connection:
-        c = connection.cursor()
+    goals = Goal.query.get(1)
 
-        c.execute("""
-            INSERT OR REPLACE INTO goals (id, calorie_goal, protein_goal)
-            VALUES (1, ?, ?)
-        """, (calorie_goal, protein_goal))
+    if goals is None:
+        goals = Goal(
+            id=1,
+            calorie_goal=calorie_goal,
+            protein_goal=protein_goal
+        )
+        db.session.add(goals)
+    else:
+        goals.calorie_goal = calorie_goal
+        goals.protein_goal = protein_goal
+
+    db.session.commit()
 
 
 # Function to load goal data
 def get_goals():
-    with sqlite3.connect(DB_PATH) as connection:
-        c = connection.cursor()
+    goals = Goal.query.get(1)
 
-        c.execute("""
-            SELECT calorie_goal, protein_goal
-            FROM goals
-            WHERE id = 1
-        """)
-
-        row = c.fetchone()
-
-    if row is None:
+    if goals is None:
         return None
 
     return {
-        "calorie_goal": row[0],
-        "protein_goal": row[1]
+        "calorie_goal": goals.calorie_goal,
+        "protein_goal": goals.protein_goal
     }
 
 
 #Function to display food entries for a given day
 def get_entries_by_date(log_date):
-    with sqlite3.connect(DB_PATH) as connection:
-        c = connection.cursor()
+    """
+    Retrieve all food entries for a given date using SQLAlchemy.
+    """
 
-        c.execute("""
-            SELECT id, food, calories, protein, carbs, fats
-            FROM log
-            WHERE log_date = ?
-        """, (log_date,))   
-        rows = c.fetchall()
-        return rows
+    entries = FoodEntry.query.filter_by(
+        log_date=log_date
+    ).all()
+
+    return entries
                   
                   # Function to delete a food entry
 def delete_entry(entry_id):
-    with sqlite3.connect(DB_PATH) as connection:
-        c = connection.cursor()
+    """
+    Delete one food entry by ID using SQLAlchemy.
+    """
 
-        c.execute("""
-            DELETE FROM log
-            WHERE id = ?
-        """, (entry_id,))
+    entry = FoodEntry.query.get(entry_id)
+
+    if entry is None:
+        return
+
+    db.session.delete(entry)
+    db.session.commit()
                   
 # Function to get one food entry by ID
 def get_entry_by_id(entry_id):
-    with sqlite3.connect(DB_PATH) as connection:
-        c = connection.cursor()
+    """
+    Retrieve one food entry by its ID using SQLAlchemy.
+    """
 
-        c.execute("""
-            SELECT id, log_date, food, calories, protein, carbs, fats
-            FROM log
-            WHERE id = ?
-        """, (entry_id,))
-
-        row = c.fetchone()
-        return row
+    return FoodEntry.query.get(entry_id)
 
 # Function to update/edit a food entry
 def update_entry(entry_id, log_date, food, calories, protein, carbs, fats):
-    # Backend validation
     if not log_date or not food:
         return
 
@@ -168,91 +128,16 @@ def update_entry(entry_id, log_date, food, calories, protein, carbs, fats):
     if calories < 0 or protein < 0 or carbs < 0 or fats < 0:
         return
 
-    with sqlite3.connect(DB_PATH) as connection:
-        c = connection.cursor()
+    entry = FoodEntry.query.get(entry_id)
 
-        c.execute("""
-            UPDATE log
-            SET log_date = ?,
-                food = ?,
-                calories = ?,
-                protein = ?,
-                carbs = ?,
-                fats = ?
-            WHERE id = ?
-        """, (log_date, food, calories, protein, carbs, fats, entry_id))
+    if entry is None:
+        return
 
-# Main menu function
-def main():
-    init_db()
-    #Variable that stores current date
-    current_log_date = None
-    while True:
-        print("\nNutrition Tracker")
-        print("1. Create new entry")
-        print("2. Add a food")
-        print("3. Calculate daily totals")        
-        print("4. Set calorie and protein goals")
-        print("5. Exit")
+    entry.log_date = log_date
+    entry.food = food
+    entry.calories = calories
+    entry.protein = protein
+    entry.carbs = carbs
+    entry.fats = fats
 
-        choice = input("Choose an option (1-5): ")
-
-        if choice == "1":
-            current_log_date = input("Enter log date (YYYY-MM-DD): ")
-            print("Current log date set to:", current_log_date)
-
-        elif choice == "2":
-            if current_log_date is None:
-                print("Please create/select a log date first.")
-            else:
-                food = input("Enter food name: ")
-                calories = float(input("Enter calories: "))
-                protein = float(input("Enter protein: "))
-                carbs = float(input("Enter carbs: "))
-                fats = float(input("Enter fats: "))
-                add_entry(current_log_date, food, calories, protein, carbs, fats)
-                print("Food added successfully and saved.")
-
-        elif choice == "3":
-            if current_log_date is None:
-                print("Please create a new log entry first.")
-            else:
-                totals = calculate_total(current_log_date)
-                goals = get_goals()
-                print("\nDaily Totals:")
-                print("Calories:", totals["calories"])
-                print("Protein:", totals["protein"])            
-                print("Carbs:", totals["carbs"])
-                print("Fats:", totals["fats"])
-                if goals is None:
-                    print("\nNo goals set yet.")
-                else:
-                    print("\nGoal Progress:")
-                    cal_goal = goals["calorie_goal"]
-                    prot_goal = goals["protein_goal"]
-
-                    cal_diff = cal_goal - totals["calories"]
-                    prot_diff = prot_goal - totals["protein"]
-
-                    print(f"Calories: {totals['calories']} / {cal_goal}")
-                    print(f"Protein: {totals['protein']} / {prot_goal}")
-
-                    print("Remaining Calories:", cal_diff)
-                    print("Remaining Protein:", prot_diff)
-
-        elif choice == "4":
-            calorie_goal = float(input("Enter calorie goal: "))
-            protein_goal = float(input("Enter protein goal: "))
-            set_goals(calorie_goal, protein_goal)
-            print("Goals saved successfully.")
-                    
-        elif choice == "5":
-            print("Exiting program.")
-            break
-
-        else:
-            print("Invalid choice. Please select 1-5.")
-
-
-if __name__ == "__main__":
-    main()
+    db.session.commit()

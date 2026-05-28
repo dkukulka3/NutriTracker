@@ -63,19 +63,19 @@
         {% for entry in entries %}
         <div class="food-entry">
 
-            <p><strong>Food:</strong> {{ entry[1] }}</p>
-            <p>Calories: {{ entry[2] }}</p>
-            <p>Protein: {{ entry[3] }}</p>
-            <p>Carbs: {{ entry[4] }}</p>
-            <p>Fats: {{ entry[5] }}</p>
+            <p><strong>Food:</strong> {{ entry.food }}</p>
+<p>Calories: {{ entry.calories }}</p>
+<p>Protein: {{ entry.protein }}</p>
+<p>Carbs: {{ entry.carbs }}</p>
+<p>Fats: {{ entry.fats }}</p>
 
-            <a href="{{ url_for('main.edit', entry_id=entry[0]) }}">
+<a href="{{ url_for('main.edit', entry_id=entry.id) }}">
                 <button type="button">Edit</button>
             </a>
 
             <form
                 method="POST"
-                action="{{ url_for('main.delete', entry_id=entry[0]) }}"
+                action="{{ url_for('main.delete', entry_id=entry.id) }}"
                 style="display: inline;"
             >
                 <input type="hidden" name="log_date" value="{{ log_date }}">
