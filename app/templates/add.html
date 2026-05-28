@@ -6,19 +6,21 @@
 {% if error %}
     <p class="error">{{ error }}</p>
 {% endif %}
+
 {% if success_message %}
 <div class="card">
     <p class="success">{{ success_message }}</p>
 
-    <a href="{{ url_for('add') }}">
+    <a href="{{ url_for('main.add') }}">
         <button type="button">Add Another Food</button>
     </a>
 
-    <a href="{{ url_for('home') }}">
+    <a href="{{ url_for('main.home') }}">
         <button type="button">Return Home</button>
     </a>
-    </div>
+</div>
 {% endif %}
+
 {% if not success_message %}
 <div class="card">
 <form method="POST">

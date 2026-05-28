@@ -6,6 +6,7 @@
 {% if error %}
     <p class="error">{{ error }}</p>
 {% endif %}
+
 <div class="card">
 <form method="POST">
     <label for="log_date">Date:</label>
@@ -23,9 +24,9 @@
     <p>Carbs: {{ totals["carbs"] }}</p>
     <p>Fats: {{ totals["fats"] }}</p>
 </div>
+
 <div class="card">
     {% if goals %}
-
         <h3>Goal Progress</h3>
 
         <p>
@@ -51,18 +52,15 @@
         <progress value="{{ protein_percent }}" max="100"></progress>
 
     {% else %}
-
         <p>No goals set yet.</p>
-
     {% endif %}
-    </div>
+</div>
+
 <div class="card">
     <h3>Foods Logged</h3>
 
     {% if entries %}
-
         {% for entry in entries %}
-
         <div class="food-entry">
 
             <p><strong>Food:</strong> {{ entry[1] }}</p>
@@ -71,47 +69,41 @@
             <p>Carbs: {{ entry[4] }}</p>
             <p>Fats: {{ entry[5] }}</p>
 
-            <a href="{{ url_for('edit', entry_id=entry[0]) }}">
+            <a href="{{ url_for('main.edit', entry_id=entry[0]) }}">
                 <button type="button">Edit</button>
             </a>
 
             <form
                 method="POST"
-                action="{{ url_for('delete', entry_id=entry[0]) }}"
+                action="{{ url_for('main.delete', entry_id=entry[0]) }}"
                 style="display: inline;"
             >
-
                 <input type="hidden" name="log_date" value="{{ log_date }}">
 
                 <button type="submit">Delete</button>
-
             </form>
 
             <hr>
 
         </div>
-
         {% endfor %}
-
     {% else %}
-
         <p>No food entries found for this date.</p>
-
     {% endif %}
-    </div>
-    
+</div>
+
 <div class="card">
     <h3>Quick Actions</h3>
 
-    <a href="{{ url_for('add') }}">
+    <a href="{{ url_for('main.add') }}">
         <button type="button">Add Food</button>
     </a>
 
-    <a href="{{ url_for('home') }}">
+    <a href="{{ url_for('main.home') }}">
         <button type="button">Return Home</button>
     </a>
 
-    <a href="{{ url_for('goals') }}">
+    <a href="{{ url_for('main.goals') }}">
         <button type="button">Set Goals</button>
     </a>
 </div>
