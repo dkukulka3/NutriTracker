@@ -1,4 +1,9 @@
 from flask import Blueprint, render_template, request, redirect, url_for
+from flask_login import login_user, current_user, login_required
+from datetime import date
+
+from app.extensions import db
+from app.models import User
 from app.nutrition_log import (
     add_entry,
     calculate_total,
@@ -9,7 +14,6 @@ from app.nutrition_log import (
     get_entry_by_id,
     update_entry
 )
-from datetime import date
 
 main = Blueprint("main", __name__)
 
@@ -22,11 +26,12 @@ def safe_float(value):
 
 
 @main.route("/")
+@login_required
 def home():
     today = date.today().isoformat()
 
-    totals = calculate_total(today)
-    goals = get_goals()
+    totals = calculate_total(today, current_user.id)
+    goals = get_goals(current_user.id)
 
     calorie_percent = 0
     protein_percent = 0
@@ -49,6 +54,7 @@ def home():
 
 
 @main.route("/add", methods=["GET", "POST"])
+@login_required
 def add():
     if request.method == "POST":
         log_date = request.form.get("log_date", "").strip()
@@ -68,7 +74,7 @@ def add():
                 error="Calories, protein, carbs, and fats must all be valid numbers."
             )
 
-        add_entry(log_date, food, calories, protein, carbs, fats)
+        add_entry(log_date, food, calories, protein, carbs, fats, current_user.id)
 
         return render_template("add.html", success_message="Food added successfully!")
 
@@ -76,6 +82,7 @@ def add():
 
 
 @main.route("/totals", methods=["GET", "POST"])
+@login_required
 def totals():
     if request.method == "POST":
         log_date = request.form.get("log_date", "").strip()
@@ -83,9 +90,9 @@ def totals():
         log_date = request.args.get("log_date", "").strip()
 
     if log_date:
-        totals = calculate_total(log_date)
-        entries = get_entries_by_date(log_date)
-        goals = get_goals()
+        totals = calculate_total(log_date, current_user.id)
+        entries = get_entries_by_date(log_date, current_user.id)
+        goals = get_goals(current_user.id)
 
         calorie_percent = 0
         protein_percent = 0
@@ -111,17 +118,19 @@ def totals():
 
 
 @main.route("/delete/<int:entry_id>", methods=["POST"])
+@login_required
 def delete(entry_id):
     log_date = request.form.get("log_date")
 
-    delete_entry(entry_id)
+    delete_entry(entry_id, current_user.id)
 
     return redirect(url_for("main.totals", log_date=log_date))
 
 
 @main.route("/edit/<int:entry_id>", methods=["GET", "POST"])
+@login_required
 def edit(entry_id):
-    entry = get_entry_by_id(entry_id)
+    entry = get_entry_by_id(entry_id, current_user.id)
 
     if entry is None:
         return "Entry not found."
@@ -149,7 +158,16 @@ def edit(entry_id):
                 error="Calories, protein, carbs, and fats must all be valid numbers."
             )
 
-        update_entry(entry_id, log_date, food, calories, protein, carbs, fats)
+        update_entry(
+            entry_id,
+            log_date,
+            food,
+            calories,
+            protein,
+            carbs,
+            fats,
+            current_user.id
+        )
 
         return redirect(url_for("main.totals", log_date=log_date))
 
@@ -157,6 +175,7 @@ def edit(entry_id):
 
 
 @main.route("/goals", methods=["GET", "POST"])
+@login_required
 def goals():
     if request.method == "POST":
         calorie_goal = safe_float(request.form.get("calorie_goal"))
@@ -168,7 +187,7 @@ def goals():
                 error="Both goals must be valid numbers."
             )
 
-        set_goals(calorie_goal, protein_goal)
+        set_goals(calorie_goal, protein_goal, current_user.id)
 
         return render_template(
             "goals.html",
@@ -176,3 +195,68 @@ def goals():
         )
 
     return render_template("goals.html")
+
+
+@main.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        email = request.form.get("email", "").strip()
+        password = request.form.get("password", "").strip()
+
+        if not username or not email or not password:
+            return render_template(
+                "register.html",
+                error="Username, email, and password are required."
+            )
+
+        existing_user = User.query.filter(
+            (User.username == username) | (User.email == email)
+        ).first()
+
+        if existing_user:
+            return render_template(
+                "register.html",
+                error="Username or email already exists."
+            )
+
+        new_user = User(
+            username=username,
+            email=email
+        )
+
+        new_user.set_password(password)
+
+        db.session.add(new_user)
+        db.session.commit()
+
+        return redirect(url_for("main.login"))
+
+    return render_template("register.html")
+
+
+@main.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip()
+        password = request.form.get("password", "").strip()
+
+        if not email or not password:
+            return render_template(
+                "login.html",
+                error="Email and password are required."
+            )
+
+        user = User.query.filter_by(email=email).first()
+
+        if user is None or not user.check_password(password):
+            return render_template(
+                "login.html",
+                error="Invalid email or password."
+            )
+
+        login_user(user)
+
+        return redirect(url_for("main.home"))
+
+    return render_template("login.html")
