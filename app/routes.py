@@ -1,5 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for
-from flask_login import login_user, current_user, login_required
+from flask_login import (
+    login_user,
+    logout_user,
+    current_user,
+    login_required
+)
 from datetime import date
 
 from app.extensions import db
@@ -260,3 +265,10 @@ def login():
         return redirect(url_for("main.home"))
 
     return render_template("login.html")
+
+@main.route("/logout")
+@login_required
+def logout():
+    logout_user()
+
+    return redirect(url_for("main.login"))
