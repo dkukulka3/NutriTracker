@@ -1,3 +1,4 @@
+import re
 from flask import Blueprint, render_template, request, redirect, url_for
 from flask_login import (
     login_user,
@@ -213,6 +214,34 @@ def register():
             return render_template(
                 "register.html",
                 error="Username, email, and password are required."
+            )
+
+        # Username must be at least 3 characters
+        if len(username) < 3:
+            return render_template(
+                "register.html",
+                error="Username must be at least 3 characters long."
+            )
+
+        # Username may contain only letters and numbers
+        if not username.isalnum():
+            return render_template(
+                "register.html",
+                error="Username may contain only letters and numbers."
+            )
+
+        # Email must contain @
+        if "@" not in email:
+            return render_template(
+                "register.html",
+                error="Please enter a valid email address."
+            )
+
+        # Password must be at least 8 characters
+        if len(password) < 8:
+            return render_template(
+                "register.html",
+                error="Password must be at least 8 characters long."
             )
 
         existing_user = User.query.filter(

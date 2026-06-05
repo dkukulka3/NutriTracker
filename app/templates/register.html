@@ -19,6 +19,9 @@
         value="{{ request.form.get('username', '') }}"
         required
     >
+    <small>
+        Username must be at least 3 characters and contain only letters and numbers.
+    </small>
 
     <label for="email">Email:</label>
     <input
@@ -28,6 +31,9 @@
         value="{{ request.form.get('email', '') }}"
         required
     >
+    <small>
+        Please enter a valid email address.
+    </small>
 
     <label for="password">Password:</label>
     <input
@@ -36,6 +42,9 @@
         name="password"
         required
     >
+    <small>
+        Password must be at least 8 characters.
+    </small>
 
     <button type="submit">Register</button>
 

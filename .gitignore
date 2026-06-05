@@ -3,3 +3,6 @@ __pycache__/
 instance/
 .env
 venv/
+nutrition_log.db
+nutrition_log_backup_before_migrations.db
+production_secret_key.txt
