@@ -1,5 +1,5 @@
 import re
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import (
     login_user,
     logout_user,
@@ -202,7 +202,7 @@ def goals():
 
     return render_template("goals.html")
 
-
+#User registration route
 @main.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -264,11 +264,13 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
+        flash("Account created successfully. Please log in.", "success")
+
         return redirect(url_for("main.login"))
 
     return render_template("register.html")
 
-
+#Log in route
 @main.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -295,9 +297,10 @@ def login():
 
     return render_template("login.html")
 
+#Log out route
 @main.route("/logout")
 @login_required
 def logout():
     logout_user()
-
+    flash("You have been logged out successfully.", "success")
     return redirect(url_for("main.login"))

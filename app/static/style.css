@@ -118,10 +118,33 @@ p {
     margin: 10px 0;
 }
 
+/* Success messages */
+.success {
+    color: #155724;
+    background-color: #d4edda;
+
+    border: 1px solid #c3e6cb;
+    border-left: 6px solid #28a745;
+
+    padding: 12px 15px;
+    margin-bottom: 15px;
+
+    border-radius: 8px;
+    font-weight: bold;
+}
+
 /* Error messages */
 .error {
-    color: red;
+    color: #721c24;
+    background-color: #f8d7da;
+
+    border: 1px solid #f5c6cb;
+    border-left: 6px solid #dc3545;
+
+    padding: 12px 15px;
     margin-bottom: 15px;
+
+    border-radius: 8px;
     font-weight: bold;
 }
 
