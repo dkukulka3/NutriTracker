@@ -4,10 +4,10 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 class Config:
-    #Retrieve real secret key from environment
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key")
 
-    SQLALCHEMY_DATABASE_URI = (
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        "DATABASE_URL",
         "sqlite:///" + os.path.join(basedir, "nutrition_log.db")
     )
 
